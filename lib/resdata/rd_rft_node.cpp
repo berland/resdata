@@ -200,18 +200,25 @@ static void rd_rft_node_init_PLT_cells(rd_rft_node_type *rft_node,
         rd_kw_get_float_ptr(rd_rft_node_get_pressure_kw(rft_node, rft_view));
     const float *depth = rd_kw_get_float_ptr(
         rd_file_view_iget_named_kw(rft_view, CONDEPTH_KW, 0));
-    const float *flowrate = rd_kw_get_float_ptr(
-        rd_file_view_iget_named_kw(rft_view, CONVTUB_KW, 0));
-    const float *oil_flowrate = rd_kw_get_float_ptr(
-        rd_file_view_iget_named_kw(rft_view, CONOTUB_KW, 0));
-    const float *gas_flowrate = rd_kw_get_float_ptr(
-        rd_file_view_iget_named_kw(rft_view, CONGTUB_KW, 0));
-    const float *water_flowrate = rd_kw_get_float_ptr(
-        rd_file_view_iget_named_kw(rft_view, CONWTUB_KW, 0));
-    const float *connection_start = nullptr;
-    const float *connection_end = nullptr;
+
+    /* The TUB keywords can be missing, in particular for files exported by Flow */
+    const float *flowrate = nullptr; 
+    const float *oil_flowrate = nullptr;
+    const float *gas_flowrate = nullptr;
+    const float *water_flowrate = nullptr;
+    if (rd_file_view_has_kw(rft_view, CONVTUB_KW))
+        flowrate = rd_kw_get_float_ptr(rd_file_view_iget_named_kw(rft_view, CONVTUB_KW, 0));
+    if (rd_file_view_has_kw(rft_view, CONOTUB_KW))
+        oil_flowrate = rd_kw_get_float_ptr(rd_file_view_iget_named_kw(rft_view, CONOTUB_KW, 0));
+    if (rd_file_view_has_kw(rft_view, CONGTUB_KW))
+        gas_flowrate = rd_kw_get_float_ptr(rd_file_view_iget_named_kw(rft_view, CONGTUB_KW, 0));
+    if (rd_file_view_has_kw(rft_view, CONWTUB_KW))
+        water_flowrate = rd_kw_get_float_ptr(rd_file_view_iget_named_kw(rft_view, CONWTUB_KW, 0));
+
 
     /* The keywords CONLENST_KW and CONLENEN_KW are ONLY present if we are dealing with a MSW well. */
+    const float *connection_start = nullptr;
+    const float *connection_end = nullptr;
     if (rd_file_view_has_kw(rft_view, CONLENST_KW))
         connection_start = rd_kw_get_float_ptr(
             rd_file_view_iget_named_kw(rft_view, CONLENST_KW, 0));
@@ -224,17 +231,31 @@ static void rd_rft_node_init_PLT_cells(rd_rft_node_type *rft_node,
         double cs = 0;
         double ce = 0;
 
+
         if (connection_start)
             cs = connection_start[c];
 
         if (connection_end)
             ce = connection_end[c];
 
+        double vtub = 0;
+        double otub = 0;
+        double gtub = 0;
+        double wtub = 0;
+
+        if (flowrate)
+            vtub = flowrate[c];
+        if (oil_flowrate)
+            otub = oil_flowrate[c];
+        if (gas_flowrate)
+            gtub = gas_flowrate[c];
+        if (water_flowrate)
+            wtub = water_flowrate[c];
+
         /* The connection coordinates are shifted -= 1; i.e. all internal usage is offset 0. */
         rd_rft_cell_type *cell = rd_rft_cell_alloc_PLT(
             i[c] - 1, j[c] - 1, k[c] - 1, depth[c], P[c], OR[c], GR[c], WR[c],
-            cs, ce, flowrate[c], oil_flowrate[c], gas_flowrate[c],
-            water_flowrate[c]);
+            cs, ce, vtub, otub, gtub, wtub);
         rd_rft_node_append_cell(rft_node, cell);
     }
 }

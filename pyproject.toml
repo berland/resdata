@@ -1,6 +1,7 @@
 [build-system]
 requires = [
   "setuptools",
+  "scikit-build-core",
   "setuptools_scm",
   "wheel",
   "scikit-build",
@@ -8,6 +9,11 @@ requires = [
   "conan<2",
   "ninja",
 ]
+build-backend = "scikit_build_core.build"
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers"
+
+[project]
+name = "resdata"
+version = "6.0.0"
