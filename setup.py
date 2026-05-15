@@ -141,7 +141,7 @@ skbuild.setup(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests", "ert.*", "ert"],
     ),
     package_dir={"": "python"},
-    license="GPL-3.0",
+    license="GPL-3.0-only",
     platforms="any",
     install_requires=[
         "cwrap",
